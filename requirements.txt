@@ -1,0 +1,7 @@
+numpy
+matplotlib
+pandas
+harp-python
+pyopenephys
+jupyter
+ipython
