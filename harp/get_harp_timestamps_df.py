@@ -2,6 +2,8 @@ import harp
 import pandas as pd
 from harp.model import Model, Register, Access
 import os
+from pathlib import Path
+import matplotlib.pyplot as plt
 
 # Import custom functions
 import harp_utils as hu
@@ -11,107 +13,80 @@ import harp_utils as hu
 # ----------------------------------------------------------------------------------
 
 # Define animal and session ID
-animal_ID = 'FNT098'
-session_ID = '2024-03-19T13-15-30'
+animal_ID = 'FNT103'
+session_ID = '2024-08-20T15-21-13'
 
 # path behavioural data on Ceph repo
-input_root_dir = r"W:\projects\FlexiVexi\behavioural_data" 
-output_root_dir = (r"C:\Users\megan\Documents\sjlab\flexible-navigation-task" +
-              r"\Data Analysis\intermediate_variables")
+INPUT = Path("/ceph/sjones/projects/FlexiVexi/behavioural_data/")
+OUTPUT = Path("/ceph/sjones/projects/FlexiVexi/Data Analysis/intermediate_variables")
 
 # Specify mapping from sound index to reward port
-soundIdx0 = 14
-soundIdx1 = 10
-soundOffIdx = 18
+SOUNDS = {'soundIdx0' :14,
+'soundIdx1' : 10,
+'soundOffIdx' : 18}
 
 # ----------------------------------------------------------------------------------
 # Section 1: Import data
 # ----------------------------------------------------------------------------------
 
-# Create reader for behavior.
-bin_b_path = os.path.join(
-    input_root_dir, 
-    animal_ID, 
-    session_ID, 
-    "Behavior.harp"
-)
-behavior_reader = harp.create_reader(bin_b_path)
+class harp_session():
 
-# Create reader for sound card.
-# NOTE: explicitly defined model will be deprecated or redundant in future
-bin_sound_path = os.path.join(
-    input_root_dir, 
-    animal_ID, 
-    session_ID, 
-    "SoundCard.harp", 
-    "SoundCard_32.bin"
-)
-model = Model(
-    device='Soundcard', 
-    whoAmI=1280,
-    firmwareVersion='2.2',
-    hardwareTargets='1.1',
-    registers={
-        'PlaySoundOrFrequency': Register(
-            address=32, 
-            type="U16", 
-            access=Access.Event
-        )
-    }
-)
-sound_reader = harp.create_reader(model, keep_type=True)
+    def __init__(self, animal_ID, session_ID, INPUT, OUTPUT, SOUNDS): 
 
-# Import behavioral data as data frame
-session_path = os.path.join(input_root_dir, animal_ID, session_ID)
-filepath = os.path.join(session_path, 'Experimental-data', \
-                        session_ID + '_experimental-data.csv')
-trials_df = pd.read_csv(filepath)
+        self.animal_ID = animal_ID
+        self.session_ID = session_ID
+        self.sounds = SOUNDS
+        self.input_root_dir = INPUT
+        self.output_root_dir = OUTPUT
 
-# -----------------------------------------------------------------------------
-# Section 2: Create data frame df_trials with trial summary info and 
-#            harp timestamps
-# -----------------------------------------------------------------------------
+        # Create reader for behavior.
+        bin_b_path = INPUT / animal_ID / session_ID / "Behavior.harp"
 
-# get trial_start_times for the specified stage
-stage = trials_df['TrainingStage'].iloc[0]
-if stage == 4:
-    dot_onset_times = trials_df['DotOnsetTime_harp']
-    trial_start_times = get_trial_start_times(4, dot_onset_times=dot_onset_times)
-elif stage == 5:
-    trial_start_times = get_trial_start_times(5, bin_sound_path=bin_sound_path, sound_reader=sound_reader)
-# Replace TrialStart in trials_df with trial start times from harp
-trials_df['TrialStart'] = trial_start_times
+        behavior_reader = harp.create_reader(bin_b_path)
 
-# Get dot onset and offset times given by TTL pulses
-ttl_state_df = hu.get_ttl_state_df(behavior_reader)
-first_dot_onset_time = trials_df['DotOnsetTime'].iloc[0]
-dot_times_ttl, ttl_state_0 = hu.get_dot_times_from_ttl(
-    behavior_reader, 
-    first_dot_onset_time, 
-    return_TTL_state_at_startup=True
-)
-print('TTL state upon start-up: ', ttl_state_0)
-trials_df = pd.concat([trials_df, dot_times_ttl], axis=1)
+        self.behavior_reader = behavior_reader
 
-# Get a data frame with port choice and timestamp of port choice for each trial 
-# in trials_df.
-port_choice = hu.get_port_choice(trials_df, behavior_reader)
-trials_df = pd.concat([trials_df, port_choice], axis=1)
+        mousepath = OUTPUT / animal_ID
+        mousepath.mkdir(exist_ok = True)
 
-# Get timestamp of all sound onsets and offsets within each trial
-trial_sounds_df = hu.parse_trial_sounds(
-    trial_start_times, 
-    sound_reader, 
-    bin_sound_path
-)
-trials_df = pd.concat([trials_df, trial_sounds_df], axis=1)
+        sesspath = mousepath / session_ID
+        sesspath.mkdir(exist_ok = True)
 
-# -----------------------------------------------------------------------------
-# Section 3: Save trials_df as pickle file
-# -----------------------------------------------------------------------------
+        self.sesspath = sesspath
+    
+    def import_behavioral_data(self):
 
-session_output_dir = os.path.join(output_root_dir, animal_ID, session_ID)
-if not os.path.exists(session_output_dir):
-    os.makedirs(session_output_dir)
-filename = animal_ID + '_' + session_ID + '_trial_data_harp.pkl'
-trials_df.to_pickle(os.path.join(session_output_dir, filename))
+        # Import behavioral data as data frame
+        session_path = INPUT / animal_ID / session_ID
+        filepath = session_path / 'Experimental-data' / (session_ID + '_experimental-data.csv')
+        print(filepath)
+        self.trials_df = pd.read_csv(filepath)
+
+    def read_ttl(self):
+
+        self.ttl_state_df = hu.get_ttl_state_df(self.behavior_reader)
+
+    def plot_ttl(self, seconds = 20):
+        '''
+        Plots the ttl signal for the first ·seconds· seconds
+        '''
+        # Plot ttl trace
+        plt.figure(figsize=(12, 6))  # Set the figure size (width, height) in inches
+        ttl_pulse = hu.get_square_wave(self.ttl_state_df)
+        ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5)
+        plt.xlabel('timestamp (s)')
+        plt.legend(loc='upper right')
+        plt.title("Plot TTL pulses, " + session_ID)
+        t0 = ttl_pulse['timestamp'].iloc[0]
+        plt.xlim(t0+50, t0 + seconds)
+        # Save the figure with the name as the session_ID in the current directory
+        output_filename = f"TTLs_in_harp_{self.session_ID}.png"
+        plt.savefig((self.sesspath / output_filename))
+        
+        # Show the plot
+        plt.show()
+
+session = harp_session(animal_ID, session_ID, INPUT, OUTPUT, SOUNDS)
+
+session.read_ttl()
+session.plot_ttl(100)
