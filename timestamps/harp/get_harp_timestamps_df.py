@@ -31,7 +31,7 @@ SOUNDS = {'soundIdx0' :14,
 
 class harp_session():
 
-    def __init__(self, animal_ID, session_ID, INPUT, OUTPUT, SOUNDS): 
+    def __init__(self, animal_ID, session_ID, INPUT = INPUT, OUTPUT = OUTPUT, SOUNDS  = SOUNDS): 
 
         self.animal_ID = animal_ID
         self.session_ID = session_ID
@@ -86,7 +86,7 @@ class harp_session():
         # Show the plot
         plt.show()
 
-session = harp_session(animal_ID, session_ID, INPUT, OUTPUT, SOUNDS)
+session = harp_session(animal_ID, session_ID)
 
 session.read_ttl()
 session.plot_ttl(100)
