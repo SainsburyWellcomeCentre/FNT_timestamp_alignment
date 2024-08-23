@@ -9,7 +9,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
     requirements = fh.readlines()
 
 setup(
-    name="timestamp-alignment",
+    name="timestamps",
     version="0.1.0",
     author="Megan Lockwood",
     author_email="anconi.1999@gmail.com",
