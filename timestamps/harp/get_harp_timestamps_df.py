@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 # Import custom functions
-import harp_utils as hu
+import utils.harp_utils as hu
                 
 # ----------------------------------------------------------------------------------
 # Section 0: Define directory and analysis params
