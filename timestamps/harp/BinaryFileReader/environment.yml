@@ -1,0 +1,9 @@
+name: .conda
+dependencies:
+- pip
+- jupyter
+- matplotlib
+- pandas
+- numpy
+- pip:
+  - harp-python

@@ -1,7 +1,8 @@
-numpy
+numpy==1.26.4 #Higher versions break the read() function in harp as of harp-python 0.2.0
 matplotlib
 pandas
 harp-python
 pyopenephys
+open-ephys-python-tools
 jupyter
 ipython
