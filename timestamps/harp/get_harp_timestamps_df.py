@@ -12,10 +12,6 @@ import utils.harp_utils as hu
 # Section 0: Define directory and analysis params
 # ----------------------------------------------------------------------------------
 
-# Define animal and session ID
-animal_ID = 'FNT103'
-session_ID = '2024-08-20T15-21-13'
-
 # path behavioural data on Ceph repo
 INPUT = Path("/ceph/sjones/projects/FlexiVexi/behavioural_data/")
 OUTPUT = Path("/ceph/sjones/projects/FlexiVexi/Data Analysis/intermediate_variables")
@@ -65,6 +61,7 @@ class harp_session():
     def read_ttl(self):
 
         self.ttl_state_df = hu.get_ttl_state_df(self.behavior_reader)
+        self.ttl_state_df.to_csv(self.sesspath / 'TTLs_harp.csv')
 
     def plot_ttl(self, seconds = 20):
         '''
@@ -85,8 +82,3 @@ class harp_session():
         
         # Show the plot
         plt.show()
-
-session = harp_session(animal_ID, session_ID)
-
-session.read_ttl()
-session.plot_ttl(100)
