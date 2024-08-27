@@ -162,9 +162,6 @@ class timestamp_mapping():
         ax.set_ylabel('Count')
         fig.suptitle('Residuals from harp-pxie timestamp mapping')
         fig.savefig(self.sesspath / 'harp_residuals.png')
-
-
-
         
 
 
