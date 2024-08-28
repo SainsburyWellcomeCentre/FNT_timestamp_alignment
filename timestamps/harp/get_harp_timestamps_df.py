@@ -53,8 +53,8 @@ class harp_session():
     def import_behavioral_data(self):
 
         # Import behavioral data as data frame
-        session_path = INPUT / animal_ID / session_ID
-        filepath = session_path / 'Experimental-data' / (session_ID + '_experimental-data.csv')
+        session_path = INPUT / self.animal_ID / self.session_ID
+        filepath = session_path / 'Experimental-data' / (self.session_ID + '_experimental-data.csv')
         print(filepath)
         self.trials_df = pd.read_csv(filepath)
 
@@ -73,7 +73,7 @@ class harp_session():
         ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5)
         plt.xlabel('timestamp (s)')
         plt.legend(loc='upper right')
-        plt.title("Plot TTL pulses, " + session_ID)
+        plt.title("Plot TTL pulses, " + self.session_ID)
         t0 = ttl_pulse['timestamp'].iloc[0]
         plt.xlim(t0+50, t0 + seconds)
         # Save the figure with the name as the session_ID in the current directory
