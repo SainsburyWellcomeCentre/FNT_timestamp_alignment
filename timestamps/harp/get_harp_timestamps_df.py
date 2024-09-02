@@ -12,12 +12,8 @@ import utils.harp_utils as hu
 # Section 0: Define directory and analysis params
 # ----------------------------------------------------------------------------------
 
-# Define animal and session ID
-animal_ID = 'FNT103'
-session_ID = '2024-08-20T15-21-13'
-
-# path behavioural data on Ceph repo
-INPUT = Path("/ceph/sjones/projects/FlexiVexi/behavioural_data/")
+# path raw data on Ceph repo
+INPUT = Path("/ceph/sjones/projects/FlexiVexi/raw_data/")
 OUTPUT = Path("/ceph/sjones/projects/FlexiVexi/Data Analysis/intermediate_variables")
 
 # Specify mapping from sound index to reward port
@@ -57,14 +53,15 @@ class harp_session():
     def import_behavioral_data(self):
 
         # Import behavioral data as data frame
-        session_path = INPUT / animal_ID / session_ID
-        filepath = session_path / 'Experimental-data' / (session_ID + '_experimental-data.csv')
+        session_path = INPUT / self.animal_ID / self.session_ID
+        filepath = session_path / 'Experimental-data' / (self.session_ID + '_experimental-data.csv')
         print(filepath)
         self.trials_df = pd.read_csv(filepath)
 
     def read_ttl(self):
 
         self.ttl_state_df = hu.get_ttl_state_df(self.behavior_reader)
+        self.ttl_state_df.to_csv(self.sesspath / 'TTLs_harp.csv')
 
     def plot_ttl(self, seconds = 20):
         '''
@@ -76,7 +73,7 @@ class harp_session():
         ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5)
         plt.xlabel('timestamp (s)')
         plt.legend(loc='upper right')
-        plt.title("Plot TTL pulses, " + session_ID)
+        plt.title("Plot TTL pulses, " + self.session_ID)
         t0 = ttl_pulse['timestamp'].iloc[0]
         plt.xlim(t0+50, t0 + seconds)
         # Save the figure with the name as the session_ID in the current directory
@@ -85,8 +82,3 @@ class harp_session():
         
         # Show the plot
         plt.show()
-
-session = harp_session(animal_ID, session_ID)
-
-session.read_ttl()
-session.plot_ttl(100)
