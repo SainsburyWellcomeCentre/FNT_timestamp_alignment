@@ -12,8 +12,8 @@ import utils.harp_utils as hu
 # Section 0: Define directory and analysis params
 # ----------------------------------------------------------------------------------
 
-# path behavioural data on Ceph repo
-INPUT = Path("/ceph/sjones/projects/FlexiVexi/behavioural_data/")
+# path raw data on Ceph repo
+INPUT = Path("/ceph/sjones/projects/FlexiVexi/raw_data/")
 OUTPUT = Path("/ceph/sjones/projects/FlexiVexi/Data Analysis/intermediate_variables")
 
 # Specify mapping from sound index to reward port
