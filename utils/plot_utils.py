@@ -17,10 +17,13 @@ def get_square_wave(df):
 
 def plot_ttl_trace(ttl_state_df, *, t_start, t_end):
 
-    plt.figure(figsize=(12, 6))  # Set the figure size (width, height) in inches
+    fig, ax = plt.subplots(figsize=(12, 6))  # Set the figure size (width, height) in inches
     ttl_pulse = get_square_wave(ttl_state_df)
-    ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5)
-    plt.xlabel('timestamp (s)')
-    plt.legend(loc='upper right')
-    plt.xlim(t_start, t_end)
+    ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5, ax=ax)
+    ax.set_xlabel('timestamp (s)')
+    ax.legend(loc='upper right')
+    ax.set_xlim(t_start, t_end)
+
     plt.show()
+
+    return fig, ax
