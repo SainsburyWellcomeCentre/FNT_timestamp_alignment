@@ -173,7 +173,9 @@ def get_port_choice(trials_df, behavior_reader):
     - behavior_reader (callable): Used to read the behavior harp stream (obtained using harp.create_reader('path/to/harp/binary/files')).
 
     Returns:
-    - DataFrame: DataFrame with additional columns 'ChoicePort' and 'ChoiceTimestamp'.
+    - DataFrame: DataFrame with additional columns 'ChoicePort' and 'ChoiceTimestamp', where each row corresponds to a trial in trials_df, 
+        where 'ChoicePort' indicates the port choice (0 or 1 for ports 0 and 1, and -1 when the mouse did not choose a port) and 
+        'ChoiceTimestamp' indicates the timestamp of the first nosepoke within the response window.
     """
 
     all_pokes = get_all_pokes(behavior_reader)
@@ -209,8 +211,6 @@ def get_port_choice(trials_df, behavior_reader):
                 ChoiceTimestamp[trial] = first_poke.name
             else:
                 Warning('No nosepoke detected in trial ' + str(trial))
-                ChoicePort[trial] = np.nan
-                ChoiceTimestamp[trial] = np.nan
 
     # Convert numpy arrays to pandas Series
     ChoicePort = pd.Series(ChoicePort, name='ChoicePort')
