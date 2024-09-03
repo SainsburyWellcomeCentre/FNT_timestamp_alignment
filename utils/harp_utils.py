@@ -229,10 +229,16 @@ def get_all_sounds(sound_reader, bin_sound_path):
     
     # Read the harp sound card stream, for the timestamps and audio ID
     all_sounds = sound_reader.PlaySoundOrFrequency.read(bin_sound_path)
-    all_sounds.reset_index(inplace=True)
 
     # Filter to only keep events (when sound actually happened, not write commands to the board) 
     all_sounds = all_sounds.loc[all_sounds['MessageType'] == 'EVENT']
+
+    # Drop first row (which is always a sound off event) to avoid an additional 
+    # "sound offset" event in the first trial (from silence offset)
+    all_sounds = all_sounds.iloc[1:]
+
+    # Reset index
+    all_sounds.reset_index(inplace=True)
 
     return all_sounds
 
