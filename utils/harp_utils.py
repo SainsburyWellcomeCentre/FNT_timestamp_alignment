@@ -298,3 +298,17 @@ def parse_trial_sounds(trials_df, bin_sound_path, OFF_index=18):
     trial_sounds_df = pd.DataFrame({'AudioCueStart_harp': ON_S, 'AudioCueEnd_harp': OFF_S, 'AudioCueIdentity_harp': ID_S}) # create dataframe from all nosepoke events
 
     return trial_sounds_df
+
+# -----------------------------------------------------------------------------
+# Photodiode utils
+# -----------------------------------------------------------------------------
+
+def get_photodiode_data(behavior_reader):
+    
+    # Grab photodiode data
+    photodiode_data = behavior_reader.AnalogData.read()
+
+    # Keep only Time and AnalogInput0 columns
+    photodiode_data = photodiode_data['AnalogInput0']
+
+    return photodiode_data
