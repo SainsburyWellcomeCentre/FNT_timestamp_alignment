@@ -67,7 +67,7 @@ if not os.path.exists(session_output_folder):
 poke_events = hu.get_all_pokes(behavior_reader)
 
 # Save poke events data frame as .csv
-poke_events_filename = animal_ID + '_' + session_ID + '_' + 'poke_events.pkl'
+poke_events_filename = animal_ID + '_' + session_ID + '_' + 'poke_events.csv'
 poke_events_filepath = os.path.join(session_output_folder, poke_events_filename)
 poke_events.to_csv(poke_events_filepath)
 
@@ -79,7 +79,7 @@ poke_events.to_csv(poke_events_filepath)
 photodiode_data = hu.get_photodiode_data(behavior_reader)
 
 # Save photodiode data series as .csv
-photodiode_filename = animal_ID + '_' + session_ID + '_' + 'photodiode_data.pkl'
+photodiode_filename = animal_ID + '_' + session_ID + '_' + 'photodiode_data.csv'
 photodiode_filepath = os.path.join(session_output_folder, photodiode_filename)
 photodiode_data.to_csv(photodiode_filepath)
 
@@ -91,13 +91,15 @@ photodiode_data.to_csv(photodiode_filepath)
 sound_events = hu.get_all_sounds(bin_sound_path)
 
 # save sound events data frame as .csv
-sound_filename = animal_ID + '_' + session_ID + '_' + 'sound_events.pkl'
+sound_filename = animal_ID + '_' + session_ID + '_' + 'sound_events.csv'
 sound_filepath = os.path.join(session_output_folder, sound_filename)
-sound_events.to_csv(sound_filepath)
+sound_events.to_csv(sound_filepath, index=False)
 
 #==============================================================================
-# Save trial info data frame as .csv
+# Save Bonsai-triggered event timestamps as .csv
 #==============================================================================
+# NOTE: This is necessary for constructing trial information data frame 
+# downstream.
 
 def get_experimental_data(root_dir):
     """
