@@ -11,27 +11,77 @@ import pickle
 INPUT = Path("/ceph/sjones/projects/FlexiVexi/behavioural_data/")
 OUTPUT = Path("/ceph/sjones/projects/FlexiVexi/Data Analysis/intermediate_variables")
 
-
-# Get the path of the record node under root_folder
+# Get path to Open-Ephys recording
 def get_record_node_path(root_folder):
-    # Traverse the directory tree
-    for dirpath, dirnames, filenames in os.walk(root_folder):
-        # Check if 'settings.xml' is in the current directory
-        if 'settings.xml' in filenames:
-            return dirpath
-    return None
+    """
+    Traverse the directory tree starting from the root_folder to find the path
+    containing 'settings.xml'. This function returns the path to the directory
+    containing 'settings.xml'.
 
-# Get path to recording session under root_folder
+    Parameters:
+    root_folder (str or Path): The root directory to start the search. It can be a string or a Path object.
+
+    Returns:
+    Path: The path to the directory containing 'settings.xml'. If no such directory is found, it prints 'No recording found' and returns None.
+    """
+    # If root_folder is Path object
+    if isinstance(root_folder, Path):
+        # Traverse the directory tree
+        for dirpath in root_folder.rglob('*'):
+            # Check if 'settings.xml' is in the current directory
+            if (dirpath / 'settings.xml').exists():
+                return dirpath
+        print('No recording found')
+    
+    # If root_folder is a string
+    else: 
+        # Traverse the directory tree
+        for dirpath, dirnames, filenames in os.walk(root_folder):
+            # Check if 'settings.xml' is in the current directory
+            if 'settings.xml' in filenames:
+                return dirpath
+            else:
+                print('No recording found')
+
+# Get path to Open-Ephys session
 def get_session_path(root_folder):
-    # Traverse the directory tree
-    for dirpath, dirnames, filenames in os.walk(root_folder):
-        # Check if any file ends with 'settings.xml'
-        for filename in filenames:
-            if filename.endswith('settings.xml'):
-                # Get the folder one level up
-                session_path = os.path.dirname(dirpath)
-                return session_path
-    return None
+    """
+    Traverse the directory tree starting from the root_folder to find the path
+    containing any file that ends with 'settings.xml'. This function returns the
+    parent directory of the directory containing 'settings.xml'.
+
+    Parameters:
+    root_folder (str or Path): The root directory to start the search. It can be a string or a Path object.
+
+    Returns:
+    Path: The parent path of the directory containing 'settings.xml'. If no such directory is found, it prints 'No recording found' and returns None.
+    """
+    # If root_folder is a Path object
+    if isinstance(root_folder, Path): 
+        # Traverse the directory tree
+        for dirpath in root_folder.rglob('*'):
+            # Ensure dirpath is a directory
+            if dirpath.is_dir():
+                # Check if any file ends with 'settings.xml'
+                for file in dirpath.iterdir():
+                    if file.is_file() and file.name.endswith('settings.xml'):
+                        # Get the folder one level up
+                        return dirpath.parent
+        print('No recording found')
+    
+    # If root_folder is a string
+    else: 
+        # Traverse the directory tree
+        folder_one_level_up = None
+        for dirpath, dirnames, filenames in os.walk(root_folder):
+            # Check if any file ends with 'settings.xml'
+            for filename in filenames:
+                if filename.endswith('settings.xml'):
+                    # Get the folder one level up
+                    folder_one_level_up = os.path.dirname(dirpath)
+                    return folder_one_level_up
+        if folder_one_level_up is None:
+            print('No recording found')
 
 class openephys_session():
 
@@ -68,16 +118,16 @@ class openephys_session():
 
     def sync_data(self):
 
-                # Sync line corresponding to heartbeat signal of ephys clock (1 pulse per second of duration 0.5 seconds). 
+        # Sync line corresponding to heartbeat signal of ephys clock (1 pulse per second of duration 0.5 seconds). 
         # Use this as the master clock (set main = True).
-        self.recording.add_sync_line(1,                          # 'Heartbeat' signal line number
+        self.recording.add_sync_line(1,                     # 'Heartbeat' signal line number
                                 100,                        # processor ID
                                 'ProbeA',                   # stream name
                                 main=True)                  # use as the main stream
 
 
         # Sync line corresponding to TTL pulses
-        self.recording.add_sync_line(1,                          # TTL line number
+        self.recording.add_sync_line(1,                     # TTL line number
                                 102,                        # processor ID
                                 'PXIe-6341',                # stream name
                                 main=False)                 # synchronize to main stream
