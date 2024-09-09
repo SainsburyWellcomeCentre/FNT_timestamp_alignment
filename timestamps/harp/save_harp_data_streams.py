@@ -1,7 +1,7 @@
 # Import main libraries and define data folder
 import harp
 import os
-import utils.harp_utils as hu
+import timestamps.harp.utils as hu
 import pandas as pd
 
 #==============================================================================
