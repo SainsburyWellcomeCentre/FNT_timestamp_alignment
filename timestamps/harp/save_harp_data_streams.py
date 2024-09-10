@@ -9,6 +9,7 @@ import pandas as pd
 # Choose example session to analyze
 animal_ID = 'FNT099'
 session_ID = '2024-05-13T11-03-59'
+session_ID = '2024-05-17T10-12-40'
 
 # path raw data on Ceph
 raw_data_dir = "W:\\projects\\FlexiVexi\\raw_data"
@@ -125,18 +126,3 @@ experimental_data_filepath = get_experimental_data(
     )
 )
 trials_df = pd.read_csv(experimental_data_filepath)
-
-bonsai_events = trials_df[['TrialStart', 'TrialEnd', 'DotOnsetTime', 'DotOffsetTime']]
-
-# Rename 'DotOnsetTime' and 'DotOffsetTime' to 'DotOnsetTrigger' and 'DotOffsetTrigger'
-#   This is to distinguish the timestamp of the Bonsai trigger to project/offset 
-#   the dot from the true onset/offset of the dot, which are extracted from 
-#   the photodiode data downstream. (This is necessary only as a common-sense check 
-#   since our method of extracting dot onset/offset time from photodiode is not 
-#   completely robust!)
-bonsai_events = bonsai_events.rename(
-    columns={
-        'DotOnsetTime': 'DotOnsetTrigger', 
-        'DotOffsetTime': 'DotOffsetTrigger'
-    }
-)

@@ -251,10 +251,6 @@ def get_all_sounds(bin_sound_path):
     # Filter to only keep events (when sound actually happened, not write commands to the board) 
     all_sounds = all_sounds.loc[all_sounds['MessageType'] == 'EVENT']
 
-    # Drop first row (which is always a sound off event) to avoid an additional 
-    # "sound offset" event in the first trial (from silence offset)
-    all_sounds = all_sounds.iloc[1:]
-
     # Drop columns that are not needed
     all_sounds.drop(columns=['MessageType'], inplace=True)
     # Reset index
@@ -262,10 +258,7 @@ def get_all_sounds(bin_sound_path):
 
     return all_sounds
 
-def parse_trial_sounds(trials_df, bin_sound_path, OFF_index=18):
-
-    # Read the harp sound card stream, for the timestamps and audio ID
-    all_sounds = get_all_sounds(bin_sound_path)
+def parse_trial_sounds(trial_start_times, sound_events, OFF_index=18):
 
      # Create lists to store the poke IDs and timestamps for all trials
     ON_S, OFF_S, ID_S = [], [], []
