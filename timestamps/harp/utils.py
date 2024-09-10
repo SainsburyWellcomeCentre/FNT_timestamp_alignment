@@ -9,6 +9,8 @@ import harp
 # Retrieve trial start times based on either
 #  - audio cues (for stage 5), or
 #  - dot onset times (for stage 4)
+#   NOTE!: depracated as long as we are happy with using TrialStart from 
+#   experimental-data.csv for trial start times
 def get_trial_start_times(stage, **kwargs):
 
     """
@@ -129,15 +131,6 @@ def get_dot_times_from_ttl(behavior_reader,t0, return_TTL_state_at_startup = Fal
     elif return_TTL_state_at_startup:
         return(dot_times_ttl, ttl_state_0)
 
-def get_square_wave(df): 
-
-    # Create a new DataFrame with repeated elements
-    square_wave = {'timestamp': df['timestamp'].repeat(2).tolist()[1:],
-        'state': df['state'].repeat(2).tolist()[:-1]
-        }
-    square_wave = pd.DataFrame(square_wave)
-    return square_wave
-
 # -----------------------------------------------------------------------------
 # Nose poke utils
 # -----------------------------------------------------------------------------
@@ -233,7 +226,8 @@ def parse_trial_pokes(trial_start_times, poke_events):
 
     return trial_pokes_df
 
-# Get a data frame with port choice timestamp of port choice for each trial in trials_df.
+# Get a data frame with port choice timestamp of port choice for each trial in 
+# trials_df.
 def get_port_choice(trials_df, behavior_reader):
 
     """
