@@ -6,7 +6,7 @@ We will use a `requirements` file to make it work cross-platform. Consider freez
 
 With the repo directory as your current directory:
 ```
-conda create -n timestamps python=3.10.14
-conda activate timestamps
+conda create -n timestamp_alignment python=3.10.14
+conda activate timestamp_alignment
 pip install -e .
 ```
