@@ -162,6 +162,77 @@ def get_all_pokes(behavior_reader, ignore_dummy_port=True):
 
     return all_pokes
 
+# Parse all pokes within a trial
+def parse_trial_pokes(trial_start_times, poke_events):
+
+    """
+    Parses nose poke events within each trial and returns a DataFrame with the results 
+    where each row gives the timestamps and port ID of all nosepokes which occured within 
+    that trial.
+
+    Args:
+        trial_start_times (pd.Series): Series of trial start times.
+        poke_events (pd.DataFrame): columns:
+            - Time: Timestamp of the event.
+            - DIPort0: Boolean in which a value changing from false to true indicates a 
+            nose poke into port 0, and vice versa indicates a nosepoke out of port 0.
+            - DIPort1: Boolean in which a value changing from false to true indicates a 
+            nose poke into port 1, and vice versa indicates a nosepoke out of port 1.
+
+    Returns:
+        pd.DataFrame: DataFrame containing nose poke events for each trial.
+    """
+    num_trials = len(trial_start_times)
+    NosePokeIn = [[] for _ in range(num_trials)]
+    NosePokeOut = [[] for _ in range(num_trials)]
+    PortID = [[] for _ in range(num_trials)]
+    NumPokes = [0] * num_trials
+
+    # Iterate through trial start times and extract data from harp stream
+    for i, start_time in enumerate(trial_start_times):
+        if i < num_trials - 1:
+            end_time = trial_start_times[i + 1]
+        else:
+            end_time = start_time + 100  # 100 seconds after the last trial start time
+
+        # Extract events that occur within the time range of this trial
+        trial_events = poke_events[(poke_events.index >= start_time) & (poke_events.index <= end_time)]
+
+        # Create lists for nose pokes within trial
+        NosePokeIn_trial, NosePokeOut_trial, PortID_trial = [], [], []
+
+        for _, nosePokeEvent in trial_events.iterrows():
+            # Get the timestamp of the event (either a nose poke in or out of a port)
+            event_time = nosePokeEvent.name
+
+            # Nose poke into port 0
+            if nosePokeEvent.DIPort0:
+                NosePokeIn_trial.append(event_time)
+                PortID_trial.append(0)
+
+            # Nose poke into port 1
+            elif nosePokeEvent.DIPort1:
+                NosePokeIn_trial.append(event_time)
+                PortID_trial.append(1)
+
+            # Nose poke out of port 0 or port 1
+            elif not nosePokeEvent.DIPort0 and not nosePokeEvent.DIPort1:
+                NosePokeOut_trial.append(event_time)
+
+        NosePokeIn[i] = NosePokeIn_trial
+        NosePokeOut[i] = NosePokeOut_trial
+        PortID[i] = PortID_trial
+        NumPokes[i] = len(NosePokeIn_trial)
+
+    trial_pokes_df = pd.DataFrame({
+        'NosePokeIn': NosePokeIn,
+        'NosePokeOut': NosePokeOut,
+        'PortID': PortID,
+        'NumPokes': NumPokes
+    })
+
+    return trial_pokes_df
+
 # Get a data frame with port choice timestamp of port choice for each trial in trials_df.
 def get_port_choice(trials_df, behavior_reader):
 
