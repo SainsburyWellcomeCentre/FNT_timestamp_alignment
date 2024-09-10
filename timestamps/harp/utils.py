@@ -331,14 +331,18 @@ def get_all_sounds(bin_sound_path):
 
 def parse_trial_sounds(trial_start_times, sound_events, OFF_index=18):
 
-     # Create lists to store the poke IDs and timestamps for all trials
+    # Create lists to store the poke IDs and timestamps for all trials
     ON_S, OFF_S, ID_S = [], [], []
 
-    # Iterate through trials (rows) and extract data from harp stream
-    for _, trial in trials_df.iterrows():
+    # Iterate through trial start times and extract data from harp stream
+    for i, start_time in enumerate(trial_start_times):
+        if i < len(trial_start_times) - 1:
+            end_time = trial_start_times[i + 1]
+        else:
+            end_time = start_time + 100  # 100 seconds after the last trial start time
 
         # Extract events that occur within the time range of this trial
-        trial_events=all_sounds[(all_sounds.Time >= trial.TrialStart) & (all_sounds.Time <= trial.TrialEnd)]
+        trial_events = sound_events[(sound_events.Time >= start_time) & (sound_events.Time <= end_time)]
 
         # Create trial lists for sounds this trial
         ON, OFF, ID = [], [], []
@@ -347,11 +351,10 @@ def parse_trial_sounds(trial_start_times, sound_events, OFF_index=18):
             sound = sound[['PlaySoundOrFrequency']]
             sound = int(sound.iloc[0])
 
-            # find audio IDs from the value. Only find ID for OFFSET
+            # Find audio IDs from the value. Only find ID for OFFSET
             if sound != OFF_index:
                 ON.append(event_time)
                 ID.append(sound)
-
             else:
                 OFF.append(event_time)
 
@@ -359,7 +362,7 @@ def parse_trial_sounds(trial_start_times, sound_events, OFF_index=18):
         OFF_S.append(OFF)
         ID_S.append(ID)
         
-    trial_sounds_df = pd.DataFrame({'AudioCueStart_harp': ON_S, 'AudioCueEnd_harp': OFF_S, 'AudioCueIdentity_harp': ID_S}) # create dataframe from all nosepoke events
+    trial_sounds_df = pd.DataFrame({'AudioCueStartTimes': ON_S, 'AudioCueEndTimes': OFF_S, 'AudioCueIdentities': ID_S})  # Create dataframe from all nosepoke events
 
     return trial_sounds_df
 
