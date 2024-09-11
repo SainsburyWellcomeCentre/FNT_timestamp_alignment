@@ -87,25 +87,33 @@ class openephys_session():
 
     def __init__(self, animal_ID, session_ID):
 
+        raw_data_session_dir = os.path.join(RAW_DATA_ROOT_DIR, animal_ID, session_ID)
+        output_session_dir = os.path.join(OUTPUT_ROOT_DIR, animal_ID, session_ID)
+
+        # append Animal and Session ID to object
         self.animal_ID = animal_ID
-        self.session_ID =  session_ID
+        self.session_ID = session_ID
 
-        session_folder = INPUT / animal_ID / session_ID
-        ephys_session_path = get_session_path(session_folder)
+        # append the raw data and output directories for the session
+        self.raw_data_session_dir = raw_data_session_dir
+        self.output_session_dir = output_session_dir
 
+        # Get ephys session object
+        ephys_session_path = get_session_path(raw_data_session_dir)
         self.session = Session(ephys_session_path)
         print(self.session)
 
         self.recording = self.session.recordnodes[0].recordings[0]
 
-        mousepath = OUTPUT / animal_ID
-        mousepath.mkdir(exist_ok = True)
-
-        sesspath = mousepath / session_ID
-        sesspath.mkdir(exist_ok = True)
-
-        self.sesspath = sesspath
-
+        # Create output directory for session
+        os.makedirs(output_session_dir, exist_ok = True)
+    
+    def get_PXI_processor_ID(self):
+        idx = self.recording.events['stream_name'] == 'PXIe-6341'
+        processor_IDs = self.recording.events['processor_id'][idx]
+        PXI_processor_ID = int(processor_IDs.unique()[0])        
+        return PXI_processor_ID
+    
     def read_TTLs(self):
 
         self.sync_data()
@@ -118,6 +126,9 @@ class openephys_session():
 
     def sync_data(self):
 
+        # Get processor ID of PXIe-6341 stream
+        PXI_processor_ID = self.get_PXI_processor_ID()
+
         # Sync line corresponding to heartbeat signal of ephys clock (1 pulse per second of duration 0.5 seconds). 
         # Use this as the master clock (set main = True).
         self.recording.add_sync_line(1,                     # 'Heartbeat' signal line number
@@ -127,19 +138,22 @@ class openephys_session():
 
 
         # Sync line corresponding to TTL pulses
-        self.recording.add_sync_line(1,                     # TTL line number
-                                102,                        # processor ID
+        self.recording.add_sync_line(4,              # TTL line number
+                                PXI_processor_ID,           # processor ID
                                 'PXIe-6341',                # stream name
                                 main=False)                 # synchronize to main stream
 
-    def  plot_TTLs(self):
-        fig, ax = plt.subplots()
-        ax.plot(self.TTL_pulses['timestamp'], self.TTL_pulses['state'])
-        ax.set_xlim(0, 100)
-        ax.set_xlabel('Timestamp (s)')
-        ax.set_ylabel('TTL in PXIe board')
-        fig.suptitle(f'{self.animal_ID},{self.session_ID}')
-        fig.savefig(self.sesspath / 'TTLs_PXIe_board.png')
+    def plot_TTLs(self, seconds = 20):
+        plt.figure(figsize=(12, 6))  # Set the figure size (width, height) in inches
+        ttl_pulse = pu.get_square_wave(self.TTL_pulses)
+        ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5)
+        plt.xlabel('timestamp (s)')
+        plt.legend(loc='upper right')
+        plt.title("Plot TTL pulses in PXIe board, " + self.session_ID)
+        plt.suptitle(f'{self.animal_ID},{self.session_ID}')        
+        t0 = ttl_pulse['timestamp'].iloc[0]
+        plt.xlim(t0+50, t0+50+seconds)
+        plt.savefig(join(self.output_session_dir, 'TTLs_PXIe_board.png'))
     
     def sync_harp_ttls(self):
 
