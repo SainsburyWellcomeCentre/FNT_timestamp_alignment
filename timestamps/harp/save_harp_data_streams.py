@@ -2,14 +2,12 @@
 import harp
 import os
 import timestamps.harp.utils as hu
-import pandas as pd
 
 #==============================================================================
 
 # Choose example session to analyze
 animal_ID = 'FNT099'
 session_ID = '2024-05-13T11-03-59'
-session_ID = '2024-05-17T10-12-40'
 
 # path raw data on Ceph
 raw_data_dir = "W:\\projects\\FlexiVexi\\raw_data"
@@ -95,34 +93,3 @@ sound_events = hu.get_all_sounds(bin_sound_path)
 sound_filename = animal_ID + '_' + session_ID + '_' + 'sound_events.csv'
 sound_filepath = os.path.join(session_output_folder, sound_filename)
 sound_events.to_csv(sound_filepath, index=False)
-
-#==============================================================================
-# Save Bonsai-triggered event timestamps as .csv
-#==============================================================================
-# NOTE: This is necessary for constructing trial information data frame 
-# downstream.
-
-def get_experimental_data(root_dir):
-    """
-    Recursively searches for the 'experimental-data.csv' file within the given root directory.
-
-    Args:
-        root_dir (str): The root directory to start the search from.
-
-    Returns:
-        str: The full path to the 'experimental-data.csv' file if found, otherwise None.
-    """
-    for root, dirs, files in os.walk(root_dir):
-        for file in files:
-            if file.endswith("experimental-data.csv"):
-                return os.path.join(root, file)
-
-# Import behavioral data as data frame
-experimental_data_filepath = get_experimental_data(
-    os.path.join(
-        raw_data_dir, 
-        animal_ID, 
-        session_ID
-    )
-)
-trials_df = pd.read_csv(experimental_data_filepath)
