@@ -386,6 +386,6 @@ def get_photodiode_data(behavior_reader):
     photodiode_data = behavior_reader.AnalogData.read()
 
     # Keep only Time and AnalogInput0 columns
-    photodiode_data = photodiode_data['AnalogInput0']
+    photodiode_data = pd.DataFrame(photodiode_data['AnalogInput0'])
 
     return photodiode_data
