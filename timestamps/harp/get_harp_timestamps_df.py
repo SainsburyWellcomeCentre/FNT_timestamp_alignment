@@ -116,8 +116,12 @@ class harp_session():
         sound_events_filepath = os.path.join(self.output_session_dir, sound_events_filename)
         self.sound_events.to_csv(sound_events_filepath, index = False)
         
-    # def save_experiment_csv(self):
+    def save_experiment_csv(self):
 
+        trials_filename = self.animal_ID + '_' + self.session_ID + '_experimental-data_ephys-timestamps.csv'
+        trials_filepath = os.path.join(self.output_session_dir, trials_filename)
+        self.trials_df_ephys.to_csv(trials_filepath)
+    
     def import_behavioral_data(self):
 
         # Import behavioral data as data frame

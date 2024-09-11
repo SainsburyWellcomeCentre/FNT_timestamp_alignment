@@ -1,6 +1,5 @@
 from timestamps.harp.get_harp_timestamps_df import harp_session
 from timestamps.OpenEphys.open_ephys_utils import openephys_session
-import os
 
 animal_ID = 'FNT103'
 session_ID = '2024-08-26T14-37-42'
@@ -55,6 +54,7 @@ timestamped_variables = [
 ]
 for var in timestamped_variables:
     trials_df[var] = oe.tm.get_pxie_timestamp(trials_df[var])
+harp.trials_df_ephys = trials_df
 
 #==============================================================================
 # Save intermediate aligned to ephys master clock 
@@ -64,7 +64,6 @@ for var in timestamped_variables:
 harp.save_harp_data_streams()
 
 # Save trials_df with ephys timestamps
-trials_filename = animal_ID + '_' + session_ID + '_experimental-data_ephys-timestamps.csv'
-trials_df.to_csv(os.path.join(harp.output_session_dir, trials_filename))
+harp.save_experiment_csv()
 
 print(f"Finished analysis of {animal_ID} for session {session_ID}.")
