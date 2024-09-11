@@ -90,13 +90,13 @@ def get_session_path(root_folder):
 
 class openephys_session():
 
-    def __init__(self, animal_ID, session_ID):
+    def __init__(self, animal_ID, session_ID, raw_data_dir = RAW_DATA_ROOT_DIR, output_dir = OUTPUT_ROOT_DIR):
 
-        raw_data_session_dir = os.path.join(RAW_DATA_ROOT_DIR, animal_ID, session_ID)
-        output_session_dir = os.path.join(OUTPUT_ROOT_DIR, animal_ID, session_ID)
+        raw_data_session_dir = os.path.join(raw_data_dir, animal_ID, session_ID)
+        output_session_dir = os.path.join(output_dir, animal_ID, session_ID)
 
-        raw_data_session_dir = os.path.join(RAW_DATA_ROOT_DIR, animal_ID, session_ID)
-        output_session_dir = os.path.join(OUTPUT_ROOT_DIR, animal_ID, session_ID)
+        raw_data_session_dir = os.path.join(raw_data_dir, animal_ID, session_ID)
+        output_session_dir = os.path.join(output_dir, animal_ID, session_ID)
 
         # append Animal and Session ID to object
         self.animal_ID = animal_ID
@@ -205,7 +205,7 @@ class timestamp_mapping():
         print(f'There are {len(self.harp_onset)} harp rises and {len(self.pxie_onset)} pxie rises')
         if len(self.harp_onset) != len(self.pxie_onset):
             print('CAREFUL! There does not seem to be an equal number of rise events.')
-
+            
         #Fit the polynomial
         self.fit = np.polynomial.polynomial.Polynomial.fit(harp_onset['timestamp'], pxie_onset['global_timestamp'], 1)
         #Extract intercept and slope
