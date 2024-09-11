@@ -1,3 +1,4 @@
+from os.path import join
 import os
 from pathlib import Path
 from open_ephys.analysis import Session
@@ -6,10 +7,14 @@ import numpy as np
 import pandas as pd
 import pickle
 
+# Import custom functions
+import timestamps.utils.plot_utils as pu
 
-# path behavioural data on Ceph repo
-INPUT = Path("/ceph/sjones/projects/FlexiVexi/behavioural_data/")
-OUTPUT = Path("/ceph/sjones/projects/FlexiVexi/Data Analysis/intermediate_variables")
+# path raw data on Ceph repo
+RAW_DATA_ROOT_DIR = "W:\\projects\\FlexiVexi\\raw_data"
+
+# Path to save intermediate variables on Ceph repo
+OUTPUT_ROOT_DIR = "W:\\projects\\FlexiVexi\\data_analysis\\intermediate_variables"
 
 # Get path to Open-Ephys recording
 def get_record_node_path(root_folder):
@@ -29,7 +34,7 @@ def get_record_node_path(root_folder):
         # Traverse the directory tree
         for dirpath in root_folder.rglob('*'):
             # Check if 'settings.xml' is in the current directory
-            if (dirpath / 'settings.xml').exists():
+            if join((dirpath, 'settings.xml')).exists():
                 return dirpath
         print('No recording found')
     
@@ -87,24 +92,30 @@ class openephys_session():
 
     def __init__(self, animal_ID, session_ID):
 
+        raw_data_session_dir = os.path.join(RAW_DATA_ROOT_DIR, animal_ID, session_ID)
+        output_session_dir = os.path.join(OUTPUT_ROOT_DIR, animal_ID, session_ID)
+
         self.animal_ID = animal_ID
-        self.session_ID =  session_ID
+        self.session_ID = session_ID
+        self.raw_data_session_dir = raw_data_session_dir
+        self.output_session_dir = output_session_dir
 
-        session_folder = INPUT / animal_ID / session_ID
-        ephys_session_path = get_session_path(session_folder)
+        # Q: WHY IS THIS NEEDED?
+        self.raw_data_root_dir = RAW_DATA_ROOT_DIR
+        self.output_root_dir = OUTPUT_ROOT_DIR
 
+        ephys_session_path = get_session_path(raw_data_session_dir)
         self.session = Session(ephys_session_path)
         print(self.session)
 
         self.recording = self.session.recordnodes[0].recordings[0]
 
-        mousepath = OUTPUT / animal_ID
-        mousepath.mkdir(exist_ok = True)
+        #==============================================================================
+        # Create output directories
+        #==============================================================================
 
-        sesspath = mousepath / session_ID
-        sesspath.mkdir(exist_ok = True)
-
-        self.sesspath = sesspath
+        #Q: IS CREATING MOUSE_OUTPUT_DIR NECESSARY?
+        os.makedirs(output_session_dir, exist_ok = True)
 
     def read_TTLs(self):
 
@@ -132,14 +143,17 @@ class openephys_session():
                                 'PXIe-6341',                # stream name
                                 main=False)                 # synchronize to main stream
 
-    def  plot_TTLs(self):
-        fig, ax = plt.subplots()
-        ax.plot(self.TTL_pulses['timestamp'], self.TTL_pulses['state'])
-        ax.set_xlim(0, 100)
-        ax.set_xlabel('Timestamp (s)')
-        ax.set_ylabel('TTL in PXIe board')
-        fig.suptitle(f'{self.animal_ID},{self.session_ID}')
-        fig.savefig(self.sesspath / 'TTLs_PXIe_board.png')
+    def plot_TTLs(self, seconds = 20):
+        plt.figure(figsize=(12, 6))  # Set the figure size (width, height) in inches
+        ttl_pulse = pu.get_square_wave(self.TTL_pulses)
+        ttl_pulse.plot(x='timestamp', y='state', linewidth=0.5)
+        plt.xlabel('timestamp (s)')
+        plt.legend(loc='upper right')
+        plt.title("Plot TTL pulses in PXIe board, " + self.session_ID)
+        plt.suptitle(f'{self.animal_ID},{self.session_ID}')        
+        t0 = ttl_pulse['timestamp'].iloc[0]
+        plt.xlim(t0+50, t0 + seconds)
+        plt.savefig(join(self.output_session_dir, 'TTLs_PXIe_board.png'))
     
     def sync_harp_ttls(self):
 
@@ -150,7 +164,7 @@ class openephys_session():
         self.TTL_pulses['diff'] =  ttl_diff
 
         #Read harp timestamps
-        harp_path = self.sesspath /  'TTLs_harp.csv'
+        harp_path = join(self.output_session_dir,  'TTLs_harp.csv')
         self.harp_ttl = pd.read_csv(harp_path)
 
         #Make harp diff
@@ -162,10 +176,10 @@ class openephys_session():
         harp_onset =  self.harp_ttl[self.harp_ttl['diff']==1]
         pxie_onset = self.TTL_pulses[self.TTL_pulses['diff']==1]
 
-        self.tm = timestamp_mapping(harp_onset, pxie_onset,  self.sesspath)
+        self.tm = timestamp_mapping(harp_onset, pxie_onset,  self.output_session_dir)
         self.tm.plot_residuals()
 
-        with open((self.sesspath / 'timestamp_mapping.pkl'), 'wb') as file:
+        with open(join(self.output_session_dir, 'timestamp_mapping.pkl'), 'wb') as file:
             pickle.dump(self.tm, file)
 
 class timestamp_mapping():
@@ -174,9 +188,8 @@ class timestamp_mapping():
     some diagnostic plots and be unpickled  if neccessary to map arbitrary
     harp timestamps.  
     '''
-    
-    def __init__(self, harp_onset, pxie_onset, sesspath):
-        self.sesspath = sesspath
+    def __init__(self, harp_onset, pxie_onset, output_session_dir):
+        self.output_session_dir = output_session_dir
         self.harp_onset = harp_onset
         self.pxie_onset = pxie_onset
 
@@ -211,7 +224,10 @@ class timestamp_mapping():
         ax.set_xlabel('Actual-predicted pxie timestamp (s)')
         ax.set_ylabel('Count')
         fig.suptitle('Residuals from harp-pxie timestamp mapping')
-        fig.savefig(self.sesspath / 'harp_residuals.png')
+        fig.savefig(join(self.output_session_dir, 'harp_residuals.png'))
         
+
+
+
 
 

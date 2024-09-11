@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import harp
+import os
 
 # -----------------------------------------------------------------------------
 # General utils
@@ -65,6 +66,21 @@ def get_trial_start_times(stage, **kwargs):
     else:
         raise ValueError("Invalid stage. Only stages 4 and 5 are supported.")
 
+def get_experimental_data(root_dir):
+    """
+    Recursively searches for the 'experimental-data.csv' file within the given root directory.
+
+    Args:
+        root_dir (str): The root directory to start the search from.
+
+    Returns:
+        str: The full path to the 'experimental-data.csv' file if found, otherwise None.
+    """
+    for root, dirs, files in os.walk(root_dir):
+        for file in files:
+            if file.endswith("experimental-data.csv"):
+                return os.path.join(root, file)
+            
 # -----------------------------------------------------------------------------
 # TTL utils
 # -----------------------------------------------------------------------------
@@ -370,6 +386,6 @@ def get_photodiode_data(behavior_reader):
     photodiode_data = behavior_reader.AnalogData.read()
 
     # Keep only Time and AnalogInput0 columns
-    photodiode_data = photodiode_data['AnalogInput0']
+    photodiode_data = pd.DataFrame(photodiode_data['AnalogInput0'])
 
     return photodiode_data
