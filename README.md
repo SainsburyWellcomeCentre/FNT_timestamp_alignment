@@ -62,7 +62,7 @@ Note that there are no event "onsets" and "offsets" as with the poke events, but
 ### Examples
 
 - `extract_harp_data_streams.ipynb`: a Python notebook showing how binary files can be read into python (using the harp Python environment) to create data frames (which can subsequently be saved as .csv files in the main pipeline)
-- `align_ephys_events_to_master_clock.ipynb`: a Python notebook showing how to align timestamps to a common clock, including:
+- `align_harp_to_ephys_master_clock.ipynb`: a Python notebook showing how to align timestamps to a common clock, including:
     - Using the "heartbeat signal" in the ephys clock to correct for any dropped frames in the neuropixels data.
     - Reading in and plotting the TTLs from the harp and ephys data streams
     - Using this to align timestamps to a common clock
